@@ -1,0 +1,35 @@
+name: 'Ciel Action'
+description: 'Build AOSC packages using ciel'
+inputs:
+  ciel-state-path:
+    description: 'Path to the directory that saves ciel states between invocation'
+    required: true
+    default: '/var/lib/ciel'
+  update-os:
+    description: 'Whether to run update-os before building packages'
+    required: true
+    default: 'true'
+  packages-file:
+    description: 'Path to the file containing the list of packages to build'
+    required: true
+    default: 'packages'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup ciel workspace
+      shell: bash
+      env: INPUT_CIEL_STATE_PATH: ${{ inputs.ciel-state-path }}
+      run: |
+        ln -s $INPUT_CIEL_STATE_PATH .ciel
+
+    - name: Update OS
+      if: ${{ inputs.update-os == 'true' }}
+      shell: bash
+      run: |
+        sudo ciel update-os
+
+    - name: Build packages
+      shell: bash
+      env: INPUT_PACKAGES_FILE: ${{ inputs.packages-file }}
+      run: ${{ github.action_path }}/build.sh
